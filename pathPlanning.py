@@ -12,12 +12,12 @@ end = np.array([xf, yf, 0])
 xdiff = xf - x0
 ydiff = yf - y0
 
-dx = xdiff/10
-dy = ydiff/10
+dx = xdiff/59
+dy = ydiff/59
 
 waypoints = []
 
-for i in range(11):
+for i in range(60):
     x0 = x0 + dx
     y0 = y0 + dy
     p = [int(x0), int(y0), 0]
@@ -57,16 +57,25 @@ Blist = np.array(
 )
 
 thetalist0 = np.array([np.pi/4, np.pi/8, -np.pi/4])
+thetalist = []
 
 for i in range(len(waypoints)):
     p = waypoints[i]
     Tsb = mr.RpToTrans(R, p)
-    [thetalist, success] = mr.IKinBody(Blist, M, Tsb, thetalist0, eomg, ev)
+    [th, success] = mr.IKinBody(Blist, M, Tsb, thetalist0, eomg, ev)
+    thetalist.append(th)
+
+f = open("joint_angles.txt", "w")
+for i in range(len(thetalist)):
+    angle = thetalist[i]
+    f.write(str(angle)+"\n")
+f.close()
 
 # ============= Search ============== #
-available = []
-traversed = []
+
+
 def find_available(node):
+    available = []
     if (node[0] + 0 and node[1]+50) not in available:
         available.append([node[0] + 0, node[1]+50])
     if (node[0] + 50 and node[1]+0) not in available:
@@ -87,17 +96,21 @@ def find_available(node):
 
 
 node = [450,400]
+#
 #print(find_available(node))
 
 
-def iterate_adjacent(node):
+def iterate_adjacent(node, traversed, paths):
+    children = []
+    paths = []
+    for pos in find_available(node):
+        children.append(find_available(pos))
+    for i in range(len(children)):
+        if children[i] in traversed:
+            children.remove(children[i])
     for pos in find_available(node):
         traversed.append(pos)
-        children = find_available(pos)
-        for i in range(len(traversed)):
-            if traversed[i] in children:
-                children.remove(traversed[i])
-        print(children)
+    print(children)
         # for i in children:
         #     iterate_adjacent(i)
     return children
